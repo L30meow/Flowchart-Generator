@@ -1,7 +1,236 @@
-OUTPUT "are we insane?"
-INPUT ans
-IF ans = "yes" THEN
-	OUTPUT "correct"
-ELSE
-	OUTPUT "incorrect"
-ENDIF
+import datetime
+
+# Sequential Structures: Data Definition
+library_books = [
+    {'id': 1, 'title': 'Differential and Integral Calculus', 'author': 'Clyde E. Love and Earl D. Rainville', 'available': 3, 'price': 20},
+    {'id': 2, 'title': 'College Algebra', 'author': 'Paul R. Rider', 'available': 2, 'price': 15},
+    {'id': 3, 'title': 'Engineering Mechanics', 'author': 'Ferdinand L. Singer', 'available': 4, 'price': 25},
+    {'id': 4, 'title': 'Geotechnical Engineering', 'author': 'Vns Murthy', 'available': 1, 'price': 18},
+    {'id': 5, 'title': 'Highway Engineering', 'author': 'Justo and Khanna', 'available': 3, 'price': 22},
+    {'id': 6, 'title': 'Earthquake Engineering', 'author': 'Anil K Chopra', 'available': 2, 'price': 17},
+    {'id': 7, 'title': 'Structural Analysis', 'author': 'Rusell C. Hibbeler', 'available': 1, 'price': 20},
+    {'id': 8, 'title': 'Construction Management', 'author': 'Max B. Fajardo Jr.', 'available': 2, 'price': 14},
+    {'id': 9, 'title': 'Strength of Materials', 'author': 'Andrew Pytel and Ferdinand L. Singer', 'available': 2, 'price': 18},
+    {'id': 10, 'title': 'Handbook of Civil Engineering', 'author': 'Tyler Gregory Hicks', 'available': 1, 'price': 25},
+    {'id': 11, 'title': 'Fluid Mechanics and Hydraulics', 'author': 'DIT Gillesania', 'available': 3, 'price': 19},
+    {'id': 12, 'title': 'Mechanics of Materials', 'author': 'James M. Gere', 'available': 2, 'price': 21},
+    {'id': 13, 'title': 'Fundamentals of Sustainability in CE', 'author': 'Andrew Braham', 'available': 2, 'price': 23},
+    {'id': 14, 'title': 'Calculator Techniques', 'author': 'Engr. Reynilan L. Dimal', 'available': 3, 'price': 15},
+    {'id': 15, 'title': 'Solutions to Problems in College Physics', 'author': 'Nicanor C. Dela Rama', 'available': 4, 'price': 24}
+]
+
+users = []
+
+
+# Function to check if a user is registered
+def is_registered(user_name):
+    for user in users:
+        if user['name'].lower() == user_name.lower():
+            return True
+    return False
+
+
+# Function to register a user
+def register_user():
+    print("\n\033[36m======================================================================================================")
+    print("\n\033[0mWelcome to CivilScribe Library Registration! Please fill in the following details to register.\n")
+    print("\033[36m======================================================================================================\n\033[0m")
+    user_name = input("Enter your name: ").strip()
+    user_email = input("------------------------------------------------------------------------------------------------------\nEnter your email: ").strip()
+
+    while True:
+        user_phone = input("------------------------------------------------------------------------------------------------------\nEnter your phone number (11 digits required and it must start with 09): ").strip()
+        if len(user_phone) != 11 or not user_phone.isdigit():
+            if len(user_phone) > 11:
+                print("------------------------------------------------------------------------------------------------------\nInvalid input: Phone number is \033[1mGREATER THAN 11\033[0m digits.")
+            else:
+                print("------------------------------------------------------------------------------------------------------\nInvalid input: Phone number is \033[1mLESS THAN 11\033[0m digits.")
+        elif not user_phone.startswith("09"):
+            print("------------------------------------------------------------------------------------------------------\nInvalid input: Phone number must start with '09'.")
+        else:
+            break
+
+    if is_registered(user_name):
+        print(f"\n\033[94;1mUser '{user_name}' is already registered.\033[0m")
+        return
+
+    user = {
+        'name': user_name,
+        'email': user_email,
+        'phone': user_phone,
+        'rented_books': []
+    }
+    users.append(user)
+    print(f"\n\033[94;1mUser '{user_name}' registered successfully.\033[0m")
+    display_available_books()
+
+
+# Function to rent a book
+def rent_book():
+    user_name = input("------------------------------------------------------------------------------------------------------\nEnter your name: ").strip()
+    if not is_registered(user_name):
+        print("------------------------------------------------------------------------------------------------------\n\033[3;1mYou need to be registered to rent a book. Please register first.\033[0m")
+        return
+
+    total_cost = 0
+    rented_books_list = []  # To store titles of rented books
+
+    while True:
+        book_id = int(input("------------------------------------------------------------------------------------------------------\nEnter the book ID you want to rent: ").strip())
+        book_found = False
+
+        for book in library_books:
+            if book['id'] == book_id:
+                book_found = True
+                if book['available'] > 0:
+                    for user in users:
+                        if user['name'].lower() == user_name.lower():
+                            user['rented_books'].append(book['id'])
+                            rented_books_list.append(book['title'])  # Add title to rented books list
+                            book['available'] -= 1
+                            total_cost += book['price']
+                            break
+                    break
+                else:
+                    print(f"------------------------------------------------------------------------------------------------------\nBook '{book['title']}' is currently unavailable.")
+                    break
+
+        if not book_found:
+            print(f"\n\033[94;1mBook with ID '{book_id}' not found in the library.\033[0m")
+
+        more_books = input("------------------------------------------------------------------------------------------------------\nDo you want to rent another book? (Please type 'Y' if yes and 'N' if no): ").strip().upper()
+        if more_books != 'Y':
+            break
+
+    if total_cost > 0:
+        while True:
+            print(f"------------------------------------------------------------------------------------------------------\nThe total amount you'll pay is \033[91:1m₱{total_cost}.\033[0m")
+            payment = float(input("------------------------------------------------------------------------------------------------------\nEnter the amount you would like to pay: ").strip())
+            if payment < total_cost:
+                print("------------------------------------------------------------------------------------------------------\nInsufficient payment. Please try again.")
+            else:
+                change = payment - total_cost
+                rent_date = datetime.datetime.now()
+                return_date = rent_date + datetime.timedelta(days=14)
+
+                # Prepare rental slip with rented books list
+                rented_books_str = "\n".join(f"{i + 1}. {book}" for i, book in enumerate(rented_books_list))
+                print(f"\n\033[94;1mBooks rented to {user_name}.\033[0m\n")
+                print(
+                    f"\033[96:1mRENTAL SLIP: \n************************************************\n\033[0m" +
+                    f"\033[1mName: {user_name}\nEmail: {user['email']}\nPhone: {user['phone']}\n" +
+                    f"Total Rent Cost: ₱{total_cost}\nRent Date: {rent_date}\nReturn Date: {return_date}\n" +
+                    f"Change: ₱{change:.2f}\n\nRented Books:\n{rented_books_str}\n" +
+                    f"\033[96:1m************************************************\033[0m"
+                )
+                break
+
+
+# Function to return a book
+def return_book():
+    user_name = input("------------------------------------------------------------------------------------------------------\nEnter your name: ").strip()
+    if not is_registered(user_name):
+        print("------------------------------------------------------------------------------------------------------\n\033[3;1mYou need to be registered to return a book. Please register first.\033[0m")
+        return
+
+    while True:
+        book_id = int(input("------------------------------------------------------------------------------------------------------\nEnter the book ID you want to return: ").strip())
+        book_found = False
+
+        for user in users:
+            if user['name'].lower() == user_name.lower():
+                book_found = True
+                if book_id in user['rented_books']:
+                    user['rented_books'].remove(book_id)
+                    for book in library_books:
+                        if book['id'] == book_id:
+                            book['available'] += 1
+                            print(f"\n\033[94;1mBook '{book['title']}' returned by {user_name}.\033[0m")
+                            break
+                else:
+                    print(f"\n\033[94;1mBook with ID '{book_id}' not rented by {user_name}.\033[0m")
+                break
+
+        if not book_found:
+            print(f"\n\033[94;1mUser '{user_name}' not found.\033[0m")
+
+        more_books = input("\nDo you want to return another book? (Please type 'Y' if yes and 'N' if no): ").strip().upper()
+        if more_books != 'Y':
+            break
+
+
+# Function to display available books
+def display_available_books():
+    print("\n\033[93;1mAvailable books:")
+    print("===============================================================================================")
+    print("{:<5} {:<48} {:<9} {:<64}".format("Book", "Title", "Price", "Quantity"))
+    print("===============================================================================================\033[0m")
+    for book in library_books:
+        if book['available'] > 0:
+            print("\033[36;1m[{:<2}] \033[0m{:<50} {:<11} {:<10}".format(book['id'], book['title'], f"₱{book['price']}", book['available']))
+    print("\033[93;1m===============================================================================================\033[0m")
+
+
+# Function to save users and books data to a text file
+def save_data_to_file():
+    with open('library_data.txt', 'w') as file:
+        file.write("Users:\n")
+        for user in users:
+            file.write(f"Name: {user['name']}, Email: {user['email']}, Phone: {user['phone']}, Rented Books: {user['rented_books']}\n")
+        file.write("\nBooks:\n")
+        for book in library_books:
+            file.write(f"Title: {book['title']}, Author: {book['author']}, Available: {book['available']}, Price: {book['price']}\n")
+
+
+# Main Function
+def main():
+    print("\033[36;1m")
+    print("======================================================================================================\n")
+    print(
+        "           \033[96m         Hello CivilScribies! This is the \033[94;1mCivilScribe Library \033[96mProgram ~\n")
+    print("                                             Created by:")
+    print("                                          \033[96m GROUP 7 - A141")
+    print("                           \033[94;1m              Bucay, Amerhasan B.")
+    print("\n\033[36m======================================================================================================")
+    print("\033[96m")
+    print("                                            DESCRIPTION")
+    print("\033[0;3;1m")
+    print("CivilScribe Library is a specialized book rental service catering to the needs of civil engineering ")
+    print(" students and enthusiasts. Its mission is to provide affordable, flexible, and accessible access to ")
+    print("  educational materials for individuals passionate about civil engineering, while addressing their  ")
+    print("                                  practical needs and constraints.\033[0m                                  ")
+    print("\033[36m")
+    print("======================================================================================================")
+    print("\033[0;1m")
+    print("Good day! Welcome to CivilScribe Library, where books can be rented! Below is the menu, and to enter ")
+    print("                      your choice, just type its corresponding number.\033[0m")
+    while True:
+        print("\nMenu:")
+        print("1. Register User")
+        print("2. Rent a Book")
+        print("3. Return a Book")
+        print("4. Display Available Books")
+        print("5. Exit")
+        choice = input("\nEnter your choice: ").strip()
+
+        if choice == '1':
+            register_user()
+        elif choice == '2':
+            rent_book()
+        elif choice == '3':
+            return_book()
+        elif choice == '4':
+            display_available_books()
+        elif choice == '5':
+            save_data_to_file()
+            print("\n\033[36m======================================================================================================")
+            print("\n\033[0;3;1m                   Thank you for using CivilScribe Library! Have a great day!")
+            print("\n\033[36m======================================================================================================")
+            break
+        else:
+            print("------------------------------------------------------------------------------------------------------\n\033[3mInvalid choice. Please try again.\033[0m")
+
+
+# Run the main function
+if __name__ == "__main__":
+    main()
